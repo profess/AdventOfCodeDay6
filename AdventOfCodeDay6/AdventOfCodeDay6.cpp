@@ -3,30 +3,11 @@
 #include <set>
 #include <map>
 #include <fstream>
+#include <vector>
 
 using namespace std;
 
-//long countSubtree(map<string, set<string> > &m, string s, long level) {
-//    //if (m[s].size() == 0) {
-//    //    return level + 1;
-//    //}
-//    //while (m[s].size() == 1) {
-//    //    level++;
-//    //    s = *m[s].begin();
-//    //}
-//    //if (m[s].size() > 1) {
-//    //    long curLevel = level;
-//    //    for (string t : m[s]) {
-//    //        level += countSubtree(m, t, curLevel);
-//    //    }
-//    //}
-//    //return level;
-//
-//
-//}
-
 void levelMapper(map<string, set<string> > m, map<string, long> &n, string body, long level) {
-    
     if (m[body].size() == 1) {
         n[body] = level++;
         levelMapper(m, n, *m[body].begin(), level);
@@ -41,12 +22,28 @@ void levelMapper(map<string, set<string> > m, map<string, long> &n, string body,
         n[body] = level;
     }
 }
+void levelMapper2(map<string, set<string> > m, map<string, pair<string, long> > & n, string parent, string body, long level) {
+    n[body].first = parent;
+    if (m[body].size() == 1) {
+        n[body].second = level++;
+        levelMapper2(m, n, body, *m[body].begin(), level);
+    }
+    else if (m[body].size() > 1) {
+        n[body].second = level;
+        for (string s : m[body]) {
+            levelMapper2(m, n, body, s, level + 1);
+        }
+    }
+    else {
+        n[body].second = level;
+    }
+}
 
 int main() {
     ifstream ifs = ifstream("input");
     map<string, set<string> > planet;
     char c;
-    string body, sat;
+    string body = "", sat = "";
     string* cur = &body;
     while (ifs.get(c)) {
         if (c == ')') {
@@ -63,17 +60,24 @@ int main() {
         }
     }
     planet[body].insert(sat);
-    //cout << countSubtree(planet, "COM", 0) << endl;
     long level = 0;
-    map<string, long> levels;
-    levelMapper(planet, levels, "COM", 0);
-    for (auto i = levels.begin(); i != levels.end(); i++) {
-        cout << i->first << ", " << i->second << endl;
+    map<string, pair<string, long> > levels2;
+    levelMapper2(planet, levels2, "", "COM", 0);
+    string parent = levels2.find("YOU")->second.first;
+    vector<string> youPath;
+    while (parent != "") {
+        youPath.push_back(parent);
+        parent = levels2.find(parent)->second.first;
     }
-    level = 0;
-    for (auto i = levels.begin(); i != levels.end(); i++) {
-        level += i->second;
+    parent = levels2.find("SAN")->second.first;
+    while (find(youPath.begin(), youPath.end(), parent) == youPath.end()) {
+        parent = levels2.find(parent)->second.first;
     }
-    cout << level << endl;
-
+    cout << "Common Parent: " << parent << endl;
+    long commonNode = levels2.find(parent)->second.second;
+    cout << "Common Parent Location: " << commonNode << endl;
+    long stepsToCommonNode = levels2.find("YOU")->second.second - commonNode - 1;
+    cout << "Transfers from YOU to Common Parent: " << stepsToCommonNode << endl;
+    long totalSteps = stepsToCommonNode + levels2.find("SAN")->second.second - commonNode - 1;
+    cout << "Transfers from YOU to Common Parent to SAN: " << totalSteps << endl;
 }
