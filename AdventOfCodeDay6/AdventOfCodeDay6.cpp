@@ -40,6 +40,7 @@ void levelMapper2(map<string, set<string> > m, map<string, pair<string, long> > 
 }
 
 int main() {
+
     ifstream ifs = ifstream("input");
     map<string, set<string> > planet;
     char c;
